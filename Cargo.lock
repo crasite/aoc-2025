@@ -57,6 +57,7 @@ dependencies = [
  "tracing-logfmt",
  "tracing-opentelemetry",
  "tracing-subscriber",
+ "winnow",
 ]
 
 [[package]]

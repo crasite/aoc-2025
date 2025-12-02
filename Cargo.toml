@@ -25,3 +25,4 @@ tracing-error = "0.2.1"
 tracing-logfmt = "0.3.5"
 tracing-opentelemetry = "0.32.0"
 tracing-subscriber = { version = "0.3.22", features = ["json"] }
+winnow = "0.7.14"
