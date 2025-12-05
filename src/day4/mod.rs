@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use crate::grid::Grid2D;
 
 #[derive(PartialEq, Debug)]
@@ -51,26 +53,24 @@ pub fn solve2(input: &str) -> usize {
     let mut total = 0;
     loop {
         let mut updated = false;
-        for x in 0..grid_map.width {
-            for y in 0..grid_map.height {
-                if grid_map
-                    .get_at_index(x, y)
-                    .is_none_or(|v| *v == Tile::Ground)
-                {
-                    continue;
-                }
-                let adjacent_papers = grid_map
-                    .adjacent(x, y)
-                    .iter()
-                    .flatten()
-                    .filter(|v| ***v == Tile::Paper)
-                    .count();
-                if adjacent_papers < 4 {
-                    updated = true;
-                    total += 1;
+        for (x, y) in (0..grid_map.width).cartesian_product(0..grid_map.height) {
+            if grid_map
+                .get_at_index(x, y)
+                .is_none_or(|v| *v == Tile::Ground)
+            {
+                continue;
+            }
+            let adjacent_papers = grid_map
+                .adjacent(x, y)
+                .iter()
+                .flatten()
+                .filter(|v| ***v == Tile::Paper)
+                .count();
+            if adjacent_papers < 4 {
+                updated = true;
+                total += 1;
 
-                    grid_map.replace_at_index(x, y, Tile::Ground);
-                }
+                grid_map.replace_at_index(x, y, Tile::Ground);
             }
         }
         if !updated {

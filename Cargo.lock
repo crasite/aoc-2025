@@ -41,6 +41,7 @@ dependencies = [
  "color-eyre",
  "config",
  "eyre",
+ "itertools",
  "opentelemetry",
  "opentelemetry-otlp",
  "opentelemetry-semantic-conventions",
