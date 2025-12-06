@@ -4,9 +4,9 @@ pub fn solve1(input: &str) -> usize {
     let mut total_zero = 0;
     for line in lines {
         let (s, rest) = line.split_at(1);
-        let symbol = if s.chars().next().unwrap() == 'L' {
+        let symbol = if s.starts_with('L') {
             -1
-        } else if s.chars().next().unwrap() == 'R' {
+        } else if s.starts_with('R') {
             1
         } else {
             panic!("line not possible")
@@ -96,4 +96,3 @@ L82"#;
         assert_eq!(solve2(input), expected)
     }
 }
-
