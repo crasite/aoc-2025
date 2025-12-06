@@ -1,11 +1,15 @@
-use winnow::{Parser, Result, ascii::dec_uint, combinator::separated};
+use winnow::{
+    Parser, Result,
+    ascii::{dec_uint, multispace0},
+    combinator::{separated, terminated},
+};
 struct Range {
     from: usize,
     to: usize,
 }
 
 fn parse_input(input: &mut &str) -> Result<Vec<Range>> {
-    separated(1.., parse_range, ',').parse_next(input)
+    terminated(separated(1.., parse_range, ','), multispace0).parse_next(input)
 }
 
 fn parse_range(input: &mut &str) -> Result<Range> {
