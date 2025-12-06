@@ -2,7 +2,7 @@ use aoc_2025::day4;
 
 fn main() {
     let day = "4";
-    let input = include_str!("./day4_input.txt").trim();
+    let input = include_str!("./day4_input.txt");
     let result = day4::solve1(input);
     println!("day {day} part 1: {result}");
     let result = day4::solve2(input);
