@@ -34,6 +34,10 @@ fn parse_line(input: &mut &str) -> Result<Coord> {
     })
 }
 
+fn find_set_index(junction_set: &[HashSet<Coord>], coord: &Coord) -> Option<usize> {
+    junction_set.iter().position(|set| set.contains(coord))
+}
+
 pub fn solve1(input: &str, connection: usize) -> usize {
     let mut coord_list = vec![];
     let mut junction_set: Vec<HashSet<Coord>> = vec![];
@@ -58,34 +62,7 @@ pub fn solve1(input: &str, connection: usize) -> usize {
         }
     }
     for (_, [a, b]) in min_dist_set {
-        if !junction_set.iter().any(|set| set.contains(&a)) {
-            if let Some(set) = junction_set.iter_mut().find(|c| c.contains(&b)) {
-                set.insert(a);
-            } else {
-                let set = HashSet::from_iter([a, b]);
-                junction_set.push(set);
-            }
-        } else if !junction_set.iter().any(|set| set.contains(&b)) {
-            let set = junction_set.iter_mut().find(|c| c.contains(&a)).unwrap();
-            set.insert(b);
-        } else {
-            let a_idx = junction_set
-                .iter()
-                .position(|set| set.contains(&a))
-                .unwrap();
-            let main_set = junction_set.swap_remove(a_idx);
-            if main_set.contains(&b) {
-                junction_set.push(main_set);
-            } else {
-                let b_idx = junction_set
-                    .iter()
-                    .position(|set| set.contains(&b))
-                    .unwrap();
-                let sub_set = junction_set.swap_remove(b_idx);
-                let new_set = main_set.union(&sub_set).cloned().collect();
-                junction_set.push(new_set);
-            }
-        }
+        create_connection(&mut junction_set, a, b);
     }
 
     let mut junction_size = junction_set.into_iter().map(|v| v.len()).sorted_unstable();
@@ -102,48 +79,45 @@ pub fn solve2(input: &str) -> usize {
     }
 
     let mut min_dist_set: BTreeMap<usize, [Coord; 2]> = BTreeMap::new();
-    for (i, coord) in coord_list.iter().enumerate() {
-        for other in coord_list.iter().skip(i + 1) {
-            let distance = (coord.distance(other) * 1000000.0) as usize;
-            min_dist_set.insert(distance, [coord.clone(), other.clone()]);
-        }
+    for (coord, other) in coord_list.iter().tuple_combinations() {
+        let distance = (coord.distance(other) * 1000000.0) as usize;
+        min_dist_set.insert(distance, [coord.clone(), other.clone()]);
     }
     for (_, [a, b]) in min_dist_set {
         let ax = a.x;
         let bx = b.x;
-        if !junction_set.iter().any(|set| set.contains(&a)) {
-            if let Some(set) = junction_set.iter_mut().find(|c| c.contains(&b)) {
-                set.insert(a);
-            } else {
-                let set = HashSet::from_iter([a, b]);
-                junction_set.push(set);
-            }
-        } else if !junction_set.iter().any(|set| set.contains(&b)) {
-            let set = junction_set.iter_mut().find(|c| c.contains(&a)).unwrap();
-            set.insert(b);
-        } else {
-            let a_idx = junction_set
-                .iter()
-                .position(|set| set.contains(&a))
-                .unwrap();
-            let main_set = junction_set.swap_remove(a_idx);
-            if main_set.contains(&b) {
-                junction_set.push(main_set);
-            } else {
-                let b_idx = junction_set
-                    .iter()
-                    .position(|set| set.contains(&b))
-                    .unwrap();
-                let sub_set = junction_set.swap_remove(b_idx);
-                let new_set = main_set.union(&sub_set).cloned().collect();
-                junction_set.push(new_set);
-            }
-        }
+
+        create_connection(&mut junction_set, a, b);
+
         if junction_set.len() == 1 && junction_set[0].len() == coord_list.len() {
             return (ax * bx) as usize;
         }
     }
     unreachable!()
+}
+
+fn create_connection(junction_set: &mut Vec<HashSet<Coord>>, a: Coord, b: Coord) {
+    let a_idx = find_set_index(junction_set, &a);
+    let b_idx = find_set_index(junction_set, &b);
+
+    match (a_idx, b_idx) {
+        (None, None) => {
+            junction_set.push(HashSet::from_iter([a, b]));
+        }
+        (Some(idx), None) => {
+            junction_set[idx].insert(b);
+        }
+        (None, Some(idx)) => {
+            junction_set[idx].insert(a);
+        }
+        (Some(a_idx), Some(b_idx)) => {
+            if a_idx != b_idx {
+                let main_set = junction_set.swap_remove(a_idx.max(b_idx));
+                let sub_set = junction_set.swap_remove(a_idx.min(b_idx));
+                junction_set.push(main_set.union(&sub_set).cloned().collect());
+            }
+        }
+    }
 }
 
 #[cfg(test)]
