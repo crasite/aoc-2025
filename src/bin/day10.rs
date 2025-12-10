@@ -9,8 +9,8 @@ fn main() {
     let result = solve1(INPUT);
     println!("day {DAY} part 1: {result}");
     println!("solved in {} ms", now.elapsed().as_millis());
-    // let now = Instant::now();
-    // let result = solve2(INPUT);
-    // println!("day {DAY} part 2: {result}");
-    // println!("solved in {} ms", now.elapsed().as_millis());
+    let now = Instant::now();
+    let result = solve2(INPUT);
+    println!("day {DAY} part 2: {result}");
+    println!("solved in {} ms", now.elapsed().as_millis());
 }

@@ -1,5 +1,6 @@
+use itertools::Itertools;
 use winnow::{
-    ModalResult, Parser,
+    Parser,
     ascii::{dec_int, dec_uint},
     combinator::{alt, repeat_till, separated},
     token::rest,
@@ -52,14 +53,52 @@ fn parse_instruction_line(line: &mut &str) -> winnow::Result<InstructionLine> {
     })
 }
 
-pub fn solve1(input: &str) -> usize {
-    for line in input.lines() {
-        parse_instruction_line.parse(line).unwrap();
+fn debug_print_combi(combi: &[&Vec<isize>], combi_result: &[isize]) {
+    print!("combi result of ");
+    for c in combi {
+        print!("(");
+        for (i, n) in c.iter().enumerate() {
+            if *n == 1 {
+                print!("{i},");
+            }
+        }
+        print!("), ");
     }
-    todo!()
+    println!("\nis {:?}", combi_result);
+}
+
+fn solve_line(line: &InstructionLine) -> usize {
+    for current_count in 1..line.target.len() {
+        for combi in line.button_list.iter().combinations(current_count) {
+            let combi_result = combi.iter().fold(vec![-1; line.target.len()], |acc, n| {
+                acc.iter().zip_eq(*n).map(|v| v.0 * v.1).collect()
+            });
+            if combi_result == line.target {
+                return current_count;
+            }
+        }
+    }
+    unreachable!("imposible to turn on the light");
+}
+
+pub fn solve1(input: &str) -> usize {
+    let mut instruction_list = Vec::with_capacity(input.lines().count());
+    for line in input.lines() {
+        instruction_list.push(parse_instruction_line.parse(line).unwrap());
+    }
+    let mut rs = 0;
+    for instruction in instruction_list {
+        rs += solve_line(&instruction);
+    }
+    rs
 }
 
 pub fn solve2(input: &str) -> usize {
+    let mut instruction_list = Vec::with_capacity(input.lines().count());
+    for line in input.lines() {
+        instruction_list.push(parse_instruction_line.parse(line).unwrap());
+    }
+
     todo!()
 }
 
@@ -72,10 +111,10 @@ mod tests {
 
     #[test]
     fn test_solve1() {
-        assert_eq!(solve1(TEST_INPUT), 1);
+        assert_eq!(solve1(TEST_INPUT), 7);
     }
     #[test]
     fn test_solve2() {
-        assert_eq!(solve2(TEST_INPUT), 2);
+        assert_eq!(solve2(TEST_INPUT), 33);
     }
 }
