@@ -1,5 +1,6 @@
 use good_lp::{solvers::coin_cbc, *};
 use itertools::Itertools;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use winnow::{
     Parser,
     ascii::{dec_int, dec_uint},
@@ -81,7 +82,7 @@ fn solve_line_part2(line: &InstructionLine) -> usize {
 
     // Step 4: Build constraints - one for each counter
     let num_counters = line.joltage_requirement.len();
-    let mut constraints = Vec::new();
+    let mut constraints = Vec::with_capacity(num_counters);
 
     for counter_idx in 0..num_counters {
         // Build constraint for this counter
@@ -105,19 +106,6 @@ fn solve_line_part2(line: &InstructionLine) -> usize {
     problem.set_parameter("loglevel", "0");
     let solution = problem.solve().unwrap();
 
-    // Step 6: Print the solution (which buttons to press)
-    println!("Solution:");
-    for (button_idx, &var) in button_presses.iter().enumerate() {
-        let presses = solution.value(var) as usize;
-        if presses > 0 {
-            println!(
-                "  Button {} ({:?}): press {} times",
-                button_idx, line.button_list[button_idx], presses
-            );
-        }
-    }
-
-    // Step 7: Return the total button presses
     solution.eval(exp) as usize
 }
 
@@ -153,11 +141,7 @@ pub fn solve2(input: &str) -> usize {
         instruction_list.push(parse_instruction_line.parse(line).unwrap());
     }
 
-    let mut total = 0;
-    for instruction in instruction_list {
-        total += solve_line_part2(&instruction);
-    }
-    total
+    instruction_list.par_iter().map(solve_line_part2).sum()
 }
 
 #[cfg(test)]
