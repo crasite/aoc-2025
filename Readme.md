@@ -34,7 +34,7 @@ part 2: 3926518899
 day 9 part 1: 4759531084
 solved in 0 ms
 day 9 part 2: 1539238860
-solved in 69 ms
+solved in 8 ms
 
 ## Day 10
 day 10 part 1: 488
