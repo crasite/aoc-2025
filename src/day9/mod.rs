@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use winnow::{Parser, ascii::dec_uint};
 
 fn parse_red_tile(line: &mut &str) -> winnow::Result<(usize, usize)> {
@@ -53,9 +54,9 @@ pub fn solve2(input: &str) -> usize {
         .map(|line| parse_red_tile.parse(line).unwrap())
         .collect();
 
-    red_tile_list
-        .iter()
-        .tuple_combinations()
+    let nonpar: Vec<_> = red_tile_list.iter().tuple_combinations().collect();
+    nonpar
+        .par_iter()
         .filter(|(a, b)| is_valid(a, b, &red_tile_list))
         .map(|(a, b)| rect_size(a, b))
         .max()
