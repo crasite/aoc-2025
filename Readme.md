@@ -35,3 +35,9 @@ day 9 part 1: 4759531084
 solved in 0 ms
 day 9 part 2: 1539238860
 solved in 69 ms
+
+## Day 10
+day 10 part 1: 488
+solved in 6 ms
+day 10 part 2: 18769
+solved in 7 ms

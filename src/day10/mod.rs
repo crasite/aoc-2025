@@ -86,9 +86,9 @@ fn solve_line_part2(line: &InstructionLine) -> usize {
     }
 
     // Step 5: Build and solve the problem
+    let problem = vars.minimise(&exp).using(microlp).with_all(constraints);
 
-    let mut problem = vars.minimise(&exp).using(coin_cbc).with_all(constraints);
-    problem.set_parameter("loglevel", "0");
+    // Suppress lpsolve output
     let solution = problem.solve().unwrap();
 
     solution.eval(exp) as usize
