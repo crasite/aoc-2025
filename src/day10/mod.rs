@@ -1,6 +1,5 @@
-use good_lp::{solvers::coin_cbc, *};
+use good_lp::*;
 use itertools::Itertools;
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use winnow::{
     Parser,
     ascii::{dec_int, dec_uint},
@@ -53,20 +52,6 @@ fn parse_instruction_line(line: &mut &str) -> winnow::Result<InstructionLine> {
         button_list,
         joltage_requirement,
     })
-}
-
-fn debug_print_combi(combi: &[&Vec<isize>], combi_result: &[isize]) {
-    print!("combi result of ");
-    for c in combi {
-        print!("(");
-        for (i, n) in c.iter().enumerate() {
-            if *n == 1 {
-                print!("{i},");
-            }
-        }
-        print!("), ");
-    }
-    println!("\nis {:?}", combi_result);
 }
 
 fn solve_line_part2(line: &InstructionLine) -> usize {
@@ -136,12 +121,11 @@ pub fn solve1(input: &str) -> usize {
 }
 
 pub fn solve2(input: &str) -> usize {
-    let mut instruction_list = Vec::with_capacity(input.lines().count());
-    for line in input.lines() {
-        instruction_list.push(parse_instruction_line.parse(line).unwrap());
-    }
-
-    instruction_list.par_iter().map(solve_line_part2).sum()
+    input
+        .lines()
+        .map(|line| parse_instruction_line.parse(line).unwrap())
+        .map(|v| solve_line_part2(&v))
+        .sum()
 }
 
 #[cfg(test)]
