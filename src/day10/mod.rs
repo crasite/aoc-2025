@@ -1,3 +1,4 @@
+use good_lp::{solvers::coin_cbc, *};
 use itertools::Itertools;
 use winnow::{
     Parser,
@@ -67,6 +68,59 @@ fn debug_print_combi(combi: &[&Vec<isize>], combi_result: &[isize]) {
     println!("\nis {:?}", combi_result);
 }
 
+fn solve_line_part2(line: &InstructionLine) -> usize {
+    // Step 1: Create the problem
+    let mut vars = ProblemVariables::new();
+    let num_buttons = line.button_list.len();
+
+    // Step 2: Create one variable for each button
+    let button_presses: Vec<Variable> = (0..num_buttons)
+        .map(|_| vars.add(variable().integer().min(0)))
+        .collect();
+    let exp: Expression = button_presses.iter().sum();
+
+    // Step 4: Build constraints - one for each counter
+    let num_counters = line.joltage_requirement.len();
+    let mut constraints = Vec::new();
+
+    for counter_idx in 0..num_counters {
+        // Build constraint for this counter
+        let target_value = line.joltage_requirement[counter_idx] as f64;
+
+        // Sum up button presses that affect this counter
+        let mut counter_expression = Expression::from(0);
+        for (button_idx, btn) in line.button_list.iter().enumerate() {
+            if btn[counter_idx] == -1 {
+                counter_expression += button_presses[button_idx];
+            }
+        }
+
+        // Create constraint: counter_expression == target_value
+        constraints.push(constraint!(counter_expression == target_value));
+    }
+
+    // Step 5: Build and solve the problem
+
+    let mut problem = vars.minimise(&exp).using(coin_cbc).with_all(constraints);
+    problem.set_parameter("loglevel", "0");
+    let solution = problem.solve().unwrap();
+
+    // Step 6: Print the solution (which buttons to press)
+    println!("Solution:");
+    for (button_idx, &var) in button_presses.iter().enumerate() {
+        let presses = solution.value(var) as usize;
+        if presses > 0 {
+            println!(
+                "  Button {} ({:?}): press {} times",
+                button_idx, line.button_list[button_idx], presses
+            );
+        }
+    }
+
+    // Step 7: Return the total button presses
+    solution.eval(exp) as usize
+}
+
 fn solve_line(line: &InstructionLine) -> usize {
     for current_count in 1..line.target.len() {
         for combi in line.button_list.iter().combinations(current_count) {
@@ -99,7 +153,11 @@ pub fn solve2(input: &str) -> usize {
         instruction_list.push(parse_instruction_line.parse(line).unwrap());
     }
 
-    todo!()
+    let mut total = 0;
+    for instruction in instruction_list {
+        total += solve_line_part2(&instruction);
+    }
+    total
 }
 
 #[cfg(test)]
@@ -115,6 +173,6 @@ mod tests {
     }
     #[test]
     fn test_solve2() {
-        assert_eq!(solve2(TEST_INPUT), 33);
+        assert_eq!(solve2(TEST_INPUT), 34);
     }
 }

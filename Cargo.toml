@@ -13,6 +13,7 @@ chrono = { version = "0.4.42", features = ["serde"] }
 color-eyre = "0.6.5"
 config = "0.15.19"
 eyre = "0.6.12"
+good_lp = "1.14.2"
 itertools = "0.14.0"
 opentelemetry = "0.31.0"
 opentelemetry-otlp = "0.31.0"
