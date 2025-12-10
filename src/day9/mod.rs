@@ -17,21 +17,19 @@ fn between(n: usize, min: usize, max: usize) -> bool {
     n > min && n < max
 }
 
-fn is_valid(a: &(usize, usize), b: &(usize, usize), list: &[(usize, usize)]) -> bool {
+type WindowPair<'a> = (&'a (usize, usize), &'a (usize, usize));
+
+fn is_valid(a: &(usize, usize), b: &(usize, usize), list: &[WindowPair]) -> bool {
     let (min_x, min_y) = (a.0.min(b.0), a.1.min(b.1));
     let (max_x, max_y) = (a.0.max(b.0), a.1.max(b.1));
 
-    for (&(x1, y1), &(x2, y2)) in list.iter().circular_tuple_windows() {
-        // Vertical line crossing through the rectangle
-        if x1 == x2 && between(x1, min_x, max_x) && y1.max(y2) > min_y && y1.min(y2) < max_y {
-            return false;
-        }
-        // Horizontal line crossing through the rectangle
-        if y1 == y2 && between(y1, min_y, max_y) && x1.max(x2) > min_x && x1.min(x2) < max_x {
-            return false;
-        }
-    }
-    true
+    list.iter().all(|((x1, y1), (x2, y2))| {
+        let vertical_check =
+            x1 == x2 && between(*x1, min_x, max_x) && y1.max(y2) > &min_y && y1.min(y2) < &max_y;
+        let horizontal_check =
+            y1 == y2 && between(*y1, min_y, max_y) && x1.max(x2) > &min_x && x1.min(x2) < &max_x;
+        !vertical_check && !horizontal_check
+    })
 }
 
 pub fn solve1(input: &str) -> usize {
@@ -54,10 +52,12 @@ pub fn solve2(input: &str) -> usize {
         .map(|line| parse_red_tile.parse(line).unwrap())
         .collect();
 
+    let circ_tuple_window: Vec<WindowPair> =
+        red_tile_list.iter().circular_tuple_windows().collect();
     let nonpar: Vec<_> = red_tile_list.iter().tuple_combinations().collect();
     nonpar
         .par_iter()
-        .filter(|(a, b)| is_valid(a, b, &red_tile_list))
+        .filter(|(a, b)| is_valid(a, b, &circ_tuple_window))
         .map(|(a, b)| rect_size(a, b))
         .max()
         .unwrap_or(0)
