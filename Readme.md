@@ -41,3 +41,9 @@ day 10 part 1: 488
 solved in 6 ms
 day 10 part 2: 18769
 solved in 7 ms
+
+## Day 11
+day 11 part 1: 753
+solved in 2 ms
+day 11 part 2: 450854305019580
+solved in 3 ms

@@ -1,4 +1,5 @@
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use std::collections::HashMap;
+
 use winnow::{Parser, combinator::separated, token::take};
 
 #[derive(Debug)]
@@ -29,8 +30,12 @@ fn path_finding_mandatory_visit<'a>(
     node_list: &[Node<'a>],
     from: &'a str,
     target: &str,
-    mandatory_visit: &[&str],
+    mandatory_visit: &[&'a str],
+    non_functioning_node: &mut HashMap<(&'a str, Vec<&'a str>), usize>,
 ) -> usize {
+    if let Some(cache_result) = non_functioning_node.get(&(from, mandatory_visit.to_vec())) {
+        return *cache_result;
+    }
     let mandatory_visit: Vec<_> = mandatory_visit
         .iter()
         .filter(|visit| **visit != from)
@@ -39,16 +44,27 @@ fn path_finding_mandatory_visit<'a>(
     let node = node_list.iter().find(|n| n.name == from).unwrap();
     if node.output_list.contains(&target) {
         if mandatory_visit.is_empty() {
-            println!("found += 1");
             return 1;
         } else {
+            non_functioning_node.insert((from, mandatory_visit.to_vec()), 0);
             return 0;
         }
     }
-    node.output_list
-        .par_iter()
-        .map(|v| path_finding_mandatory_visit(node_list, v, target, &mandatory_visit))
-        .sum()
+    let rs = node
+        .output_list
+        .iter()
+        .map(|v| {
+            path_finding_mandatory_visit(
+                node_list,
+                v,
+                target,
+                &mandatory_visit,
+                non_functioning_node,
+            )
+        })
+        .sum();
+    non_functioning_node.insert((from, mandatory_visit.to_vec()), rs);
+    rs
 }
 
 pub fn solve1(input: &str) -> usize {
@@ -60,11 +76,14 @@ pub fn solve1(input: &str) -> usize {
 }
 
 pub fn solve2(input: &str) -> usize {
+    let mut cache = HashMap::new();
+    let mandatory = vec!["fft", "dac"];
     let node_list: Vec<_> = input
         .lines()
         .map(|v| parse_node.parse(v).unwrap())
         .collect();
-    path_finding_mandatory_visit(&node_list, "svr", "out", &["fft", "dac"])
+
+    path_finding_mandatory_visit(&node_list, "svr", "out", &mandatory, &mut cache)
 }
 
 #[cfg(test)]
